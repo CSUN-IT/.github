@@ -1,0 +1,7 @@
+{
+  "name": "/rebase Command Workflow",
+  "description": "Add a `/rebase` command to Pull Requests to automatically rebase PRs so they can be merged",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": []
+}
