@@ -1,4 +1,4 @@
-name: DockerCI
+name: Docker Security Scan
 
 on:
   pull_request: ~
@@ -6,7 +6,7 @@ on:
     - cron: '0 8 * * *' # Triggers daily at 800
 
 jobs:
-  build-and-scan-image:
+  build-and-trivy-scan:
     name: Build And Scan Image
     runs-on: ubuntu-latest
 
@@ -16,7 +16,7 @@ jobs:
 
       - name: Set Variables
         run: |
-          APPLICATION_NAME=${GITHUB_REPOSITORY,,}
+          APPLICATION_NAME=${GITHUB_REPOSITORY,,} # convert repo name to lowercase
           RELEASE_VERSION='latest'
 
           echo "::set-env name=APPLICATION_NAME::$APPLICATION_NAME"
