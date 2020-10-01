@@ -1,0 +1,7 @@
+{
+  "name": "Publish Docker image (GitHub Packages Docker Registry [Deprecated])",
+  "description": "Build and publish a Dockerfile to GitHub Packages Docker registry",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": ["Dockerfile"]
+}
