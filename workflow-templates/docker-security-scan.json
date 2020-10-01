@@ -1,0 +1,7 @@
+{
+  "name": "Security Scan Docker Image",
+  "description": "Run security scans on a Docker image",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": ["Dockerfile"]
+}

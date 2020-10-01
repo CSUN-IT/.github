@@ -1,0 +1,7 @@
+{
+  "name": "Publish Docker image (GitHub Container Registry [New])",
+  "description": "Build and publish a Dockerfile to GitHub Container registry",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": ["Dockerfile"]
+}
