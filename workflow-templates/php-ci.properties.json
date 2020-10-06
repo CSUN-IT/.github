@@ -1,0 +1,7 @@
+{
+  "name": "Standard PHP Continuous Integration Workflow",
+  "description": "Starter template for PHP projects with jobs for PHP-CS-Fixer, PHPStan, PHPUnit",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": [".php$"]
+}
