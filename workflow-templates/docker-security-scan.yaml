@@ -17,30 +17,33 @@ jobs:
       - name: Set Variables
         run: |
           APPLICATION_NAME=${GITHUB_REPOSITORY,,} # convert repo name to lowercase
-          RELEASE_VERSION='latest'
+          REPOSITORY_NAME=$(echo "${{ github.repository }}" | cut -d/ -f2 | tr '[:upper:]' '[:lower:]')
 
-          echo "::set-env name=APPLICATION_NAME::$APPLICATION_NAME"
-          echo "::set-env name=RELEASE_VERSION::$RELEASE_VERSION"
-          echo "::set-env name=DOCKER_REGISTRY::docker.pkg.github.com"
+          echo "APPLICATION_NAME=$APPLICATION_NAME/$REPOSITORY_NAME" >> $GITHUB_ENV
+          echo "DOCKER_REGISTRY=docker.pkg.github.com" >> $GITHUB_ENV
+          echo "IMAGE_TAGS=latest" >> $GITHUB_ENV
 
       - name: Setup Docker Buildx To Load Image
         uses: docker/setup-buildx-action@v1
         with:
           driver: docker
 
-      - name: Build Docker Image Only
-        uses: docker/build-push-action@v2
+      # Requires v1 of this action for GitHub Packages Docker registry support
+      - name: Build Docker Image
+        uses: docker/build-push-action@v1
         with:
-          load: true
-          no-cache: true
-          tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.APPLICATION_NAME }}:${{ env.RELEASE_VERSION }}
+          push: false
+          repository: ${{ env.APPLICATION_NAME }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: ${{ env.DOCKER_REGISTRY }}
+          tags: ${{ env.IMAGE_TAGS }}
 
       - name: Scans Docker image with Trivy And Output As Table
         if: github.event_name == 'pull_request'
         uses: aquasecurity/trivy-action@0.0.8
         with:
-          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ env.APPLICATION_NAME }}:${{ env.RELEASE_VERSION }}
+          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ env.APPLICATION_NAME }}:${{ env.IMAGE_TAGS }}
           ignore-unfixed: true
           exit-code: '1'
           severity: 'MEDIUM,HIGH,CRITICAL'
@@ -49,16 +52,17 @@ jobs:
         if: github.event_name == 'schedule'
         uses: aquasecurity/trivy-action@0.0.8
         with:
-          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ env.APPLICATION_NAME }}:${{ env.RELEASE_VERSION }}
+          image-ref: ${{ env.DOCKER_REGISTRY }}/${{ env.APPLICATION_NAME }}:${{ env.IMAGE_TAGS }}
           ignore-unfixed: true
           format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results.sarif'
-          exit-code: '0'
+          exit-code: '1'
           severity: 'MEDIUM,HIGH,CRITICAL'
 
-      - name: Upload Trivy Result To Security Tab
-        if: github.event_name == 'schedule'
-        uses: github/codeql-action/upload-sarif@v1
-        with:
-          sarif_file: 'trivy-results.sarif'
+      # We don't have access to the security tab right now
+#      - name: Upload Trivy Result To Security Tab
+#        if: github.event_name == 'schedule'
+#        uses: github/codeql-action/upload-sarif@v1
+#        with:
+#          sarif_file: 'trivy-results.sarif'
