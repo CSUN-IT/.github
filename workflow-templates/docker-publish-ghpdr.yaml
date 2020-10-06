@@ -17,21 +17,36 @@ jobs:
       - name: Set Variables
         run: |
           APPLICATION_NAME=${GITHUB_REPOSITORY,,} # convert repo name to lowercase
-          REPOSITORY_NAME="${{ github.event.repository.name }}"
+          REPOSITORY_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
           RELEASE_VERSION=$(echo ${GITHUB_REF:10} | tr '[:upper:]' '[:lower:]')
 
-          echo "::set-env name=APPLICATION_NAME::$APPLICATION_NAME"
-          echo "::set-env name=REPOSITORY_NAME::$REPOSITORY_NAME"
-          echo "::set-env name=RELEASE_VERSION::$RELEASE_VERSION"
-          echo "::set-env name=DOCKER_REGISTRY::docker.pkg.github.com"
+          if ${{ github.event_name == 'push' && contains(github.ref, 'refs/tags/') }}; then
+            echo "IMAGE_TAGS=$RELEASE_VERSION,latest" >> $GITHUB_ENV
+          else
+            echo "IMAGE_TAGS=latest" >> $GITHUB_ENV
+          fi
+
+          echo "APPLICATION_NAME=$APPLICATION_NAME/$REPOSITORY_NAME" >> $GITHUB_ENV
+          echo "DOCKER_REGISTRY=docker.pkg.github.com" >> $GITHUB_ENV
 
       # Requires v1 of this action for GitHub Packages Docker registry support
       - name: Build And Push Docker Image
         uses: docker/build-push-action@v1
         with:
           push: true
-          repository: ${{ env.APPLICATION_NAME }}/${{ env.REPOSITORY_NAME }}
+          repository: ${{ env.APPLICATION_NAME }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           registry: ${{ env.DOCKER_REGISTRY }}
-          tags: ${{ env.RELEASE_VERSION }},latest
+          tags: ${{ env.IMAGE_TAGS }}
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
