@@ -1,0 +1,7 @@
+{
+  "name": "Deploy Kubernetes Manifests",
+  "description": "Deploy Kubernetes manifest to a Kubernetes cluster",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": [".yaml"]
+}
