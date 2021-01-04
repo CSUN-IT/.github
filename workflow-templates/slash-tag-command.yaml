@@ -3,12 +3,12 @@ name: Check for '/tag' and create new Release
 on: issue_comment
 
 jobs:
-  job1:
+  slash_command:
     runs-on: ubuntu-latest
     name: Create new Release and Automerge the PR
+    if: ${{ github.event.issue.pull_request }}
     steps:
       - name: Check to see if comment is on a PR
-        if: ${{ github.event.issue.pull_request }}
         run: |
           echo "Comment on PR #${{ github.event.issue.number }}"
 
@@ -18,10 +18,10 @@ jobs:
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           command: tag
-          reaction: "true"
-          reaction-type: "hooray"
-          allow-edits: "false"
-          permission-level: none
+          reaction: true
+          reaction-type: hooray
+          allow-edits: false
+          permission-level: write
 
       - name: Output of the command
         run: echo "The command was '${{ steps.command.outputs.command-name }}' with arguments '${{ steps.command.outputs.command-arguments }}'"
@@ -36,8 +36,6 @@ jobs:
           gh pr merge --merge ${{ github.event.issue.number }}
 
       - name: Create Release
-        if: ${{ success() }}
-        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
