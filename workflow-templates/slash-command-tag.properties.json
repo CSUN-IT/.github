@@ -1,5 +1,5 @@
 {
-  "name": "Slash Tag Command",
+  "name": "Slash Command - Tag",
   "description": "Enables the use of '/tag' command in the comments of a pull request to automerge and create a release (Ex: /tag 1.0.0)",
   "iconName": "csun-seal",
   "categories": [],
