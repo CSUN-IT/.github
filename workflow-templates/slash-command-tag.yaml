@@ -3,7 +3,7 @@ name: Check for '/tag' and create new Release
 on: issue_comment
 
 jobs:
-  job1:
+  slash_command:
     runs-on: ubuntu-latest
     name: Create new Release and Automerge the PR
     steps:
