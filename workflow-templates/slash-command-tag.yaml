@@ -35,6 +35,14 @@ jobs:
         run: |
           gh pr merge --merge ${{ github.event.issue.number }}
 
+      - name: "Get target branch for PR #${{ github.event.issue.number }}"
+        id: pr_api_request
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         uses: actions/create-release@v1
         env:
@@ -42,5 +50,6 @@ jobs:
         with:
           tag_name: ${{ steps.command.outputs.command-arguments }}
           release_name: Release ${{ steps.command.outputs.command-arguments }}
+          commitish: ${{ fromJson(steps.pr_api_request.outputs.data).base.ref }}
           draft: false
           prerelease: false
