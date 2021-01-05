@@ -1,0 +1,55 @@
+name: Check for '/tag' and create new Release
+
+on: issue_comment
+
+jobs:
+  slash_command:
+    runs-on: ubuntu-latest
+    name: Create new Release and Automerge the PR
+    if: ${{ github.event.issue.pull_request }}
+    steps:
+      - name: Check to see if comment is on a PR
+        run: |
+          echo "Comment on PR #${{ github.event.issue.number }}"
+
+      - name: Find command in PR comments
+        uses: xt0rted/slash-command-action@v1
+        id: command
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          command: tag
+          reaction: true
+          reaction-type: hooray
+          allow-edits: false
+          permission-level: write
+
+      - name: Output of the command
+        run: echo "The command was '${{ steps.command.outputs.command-name }}' with arguments '${{ steps.command.outputs.command-arguments }}'"
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Automerge PR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge --merge ${{ github.event.issue.number }}
+
+      - name: "Get target branch for PR #${{ github.event.issue.number }}"
+        id: pr_api_request
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/${{ github.repository }}/pulls/${{ github.event.issue.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.command.outputs.command-arguments }}
+          release_name: Release ${{ steps.command.outputs.command-arguments }}
+          commitish: ${{ fromJson(steps.pr_api_request.outputs.data).base.ref }}
+          draft: false
+          prerelease: false
