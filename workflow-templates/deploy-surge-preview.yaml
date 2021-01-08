@@ -1,0 +1,50 @@
+name: Deploy Surge Webpage
+
+on:
+  - pull_request
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Deploying to surge
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14
+
+      - name: Install Surge CLI
+        run: |
+          yarn global add surge
+          echo "$(yarn global bin)" >> $GITHUB_PATH
+
+      # TODO replace this step with your actual build process
+      - name: Build Website
+        run: |
+          exit 1
+
+      - name: Deploy preview to surge.sh
+        env:
+          # TODO replace the build directory
+          SITE_TARGET: 'build/'
+        run: |
+          URL="https://$GITHUB_REPOSITORY--${{ github.event.number }}.surge.sh"
+          URL=$(echo "$URL" | sed -r 's/\//--/3')
+          echo "Publishing preview to: $URL"
+
+          surge ${{ env.SITE_TARGET }} --domain $URL --token ${{ secrets.SVC_SURGE_TOKEN }}
+          SURGE_STATUS=$?
+
+          DESC=$([ $SURGE_STATUS -eq 0 ] && echo "Staging website deployed successfully" || echo "Staging website deployment failed")
+
+          echo "URL=$URL" >> $GITHUB_ENV
+          echo "DESC=$DESC" >> $GITHUB_ENV
+
+      - name: Post Preview URL to PR
+        uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: '${{ env.DESC }} : ${{ env.URL }}'
