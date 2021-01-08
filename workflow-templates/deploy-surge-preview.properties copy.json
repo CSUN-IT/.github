@@ -1,0 +1,7 @@
+{
+  "name": "Deploy PRs to surge.sh",
+  "description": "Automatically create surge.sh previews for pull requests",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": []
+}
