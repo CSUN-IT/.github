@@ -14,12 +14,9 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.SVC_TF_USER_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.SVC_TF_USER_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.SVC_LAMBDA_STAGING_USER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SVC_LAMBDA_STAGING_USER_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-          role-to-assume: arn:aws:iam::016223550285:role/terraform_deploy_role
-          role-duration-seconds: 900
-          role-session-name: github_actions
 
       # TODO: Set your Terraform information and build your Zip file
       - name: Compile Production Build
