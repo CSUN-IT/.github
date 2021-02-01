@@ -1,0 +1,44 @@
+name: Deploy Lambda Function as Zip
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  upload-s3:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.SVC_TF_USER_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SVC_TF_USER_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: arn:aws:iam::016223550285:role/terraform_deploy_role
+          role-duration-seconds: 900
+          role-session-name: github_actions
+
+      # TODO: Set your Terraform information and build your Zip file
+      - name: Compile Production Build
+        env:
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/<AWSAccountID>
+          ACCOUNT_NAME: 111122223333
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/<Region>
+          REGION_NAME: us-west-2
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/us-west-2/<FolderName>/
+          DEPLOYMENT_NAME: <FolderName>
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/us-west-2/<FolderName>/<DeploymentFile>.tf
+          FILE_NAME: <DeploymentFile>
+        run: |
+          DATE=$(date '+%Y%m%d%H%M%S')
+
+          # Write your build process and output a Zip file with the following name:
+          #   "${ACCOUNT_NAME}_${REGION_NAME}_${DEPLOYMENT_NAME}_${FILE_NAME}_${DATE}.zip"
+
+      - name: Upload Build to S3
+        run: |
+          ZipBundle=$(find . -name "*.zip" | sed s#\./##)
+          aws s3 cp $GITHUB_WORKSPACE/$ZipBundle s3://csun-lambda-staging-bucket/$(echo $ZipBundle | sed s/_/\\//g) --acl bucket-owner-full-control

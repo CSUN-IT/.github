@@ -1,0 +1,7 @@
+{
+  "name": "Deploy Lambda Function as Zip",
+  "description": "Publish zip file for a Lambda function to our centralized staging bucket",
+  "iconName": "csun-seal",
+  "categories": [],
+  "filePatterns": []
+}
