@@ -18,24 +18,42 @@ jobs:
           aws-secret-access-key: ${{ secrets.SVC_LAMBDA_STAGING_USER_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
 
-      # TODO: Set your Terraform information and build your Zip file
+      # TODO: Replace this values with your deployment configuration
+      - id: lambda
+        name: Configure Lambda Bundle Metadata
+        uses: CSUN-IT/lambda-bundler-action@v1
+        with:
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/<AWSAccountID>
+          account-id: 111122223333
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/<Region>
+          region-name: us-west-2
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/us-west-2/<FolderName>/
+          deployment-name: <FolderName>
+          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/us-west-2/<FolderName>/<DeploymentFile>.tf
+          file-name: <DeploymentFile>
+
+      #
+      # TODO: Use an `actions/setup-<lang>` action
+      #
+
+      # TODO: Build your ZIP file
       - name: Compile Production Build
         env:
-          # https://github.com/CSUN-IT/TerraformAWS/tree/master/<AWSAccountID>
-          ACCOUNT_NAME: 111122223333
-          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/<Region>
-          REGION_NAME: us-west-2
-          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/us-west-2/<FolderName>/
-          DEPLOYMENT_NAME: <FolderName>
-          # https://github.com/CSUN-IT/TerraformAWS/tree/master/111122223333/us-west-2/<FolderName>/<DeploymentFile>.tf
-          FILE_NAME: <DeploymentFile>
+          ZIP_FILE: ${{ steps.lambda.outputs.zip-file }}
+          ZIP_FILE_S3: ${{ steps.lambda.outputs.zip-file-s3 }}
         run: |
-          DATE=$(date '+%Y%m%d%H%M%S')
+          # Download dependencies...
 
-          # Write your build process and output a Zip file with the following name:
-          #   "${ACCOUNT_NAME}_${REGION_NAME}_${DEPLOYMENT_NAME}_${FILE_NAME}_${DATE}.zip"
+          # Compile anything you need
+
+          # Zip everything together using the filenames provided by the `CSUN-IT/lambda-bundler-action` step.
+          # Be sure to include the `.bundle-version.txt` file in your ZIP for future troubleshooting purposes.
+          zip -vr "$ZIP_FILE" .bundle-version.txt -x "*.DS_Store"
 
       - name: Upload Build to S3
+        env:
+          ZIP_FILE: ${{ steps.lambda.outputs.zip-file }}
+          ZIP_FILE_S3: ${{ steps.lambda.outputs.zip-file-s3 }}
+          OPEN_API_S3: ${{ steps.lambda.outputs.zip-file-s3-wo-ext }}.yml
         run: |
-          ZipBundle=$(find . -name "*.zip" | sed s#\./##)
-          aws s3 cp $GITHUB_WORKSPACE/$ZipBundle s3://csun-lambda-staging-bucket/$(echo $ZipBundle | sed s/_/\\//g) --acl bucket-owner-full-control
+          aws s3 cp "$ZIP_FILE" "s3://csun-lambda-staging-bucket/$ZIP_FILE_S3"
