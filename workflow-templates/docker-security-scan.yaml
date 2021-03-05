@@ -59,10 +59,3 @@ jobs:
           output: 'trivy-results.sarif'
           exit-code: '1'
           severity: 'MEDIUM,HIGH,CRITICAL'
-
-      # We don't have access to the security tab right now
-#      - name: Upload Trivy Result To Security Tab
-#        if: github.event_name == 'schedule'
-#        uses: github/codeql-action/upload-sarif@v1
-#        with:
-#          sarif_file: 'trivy-results.sarif'
